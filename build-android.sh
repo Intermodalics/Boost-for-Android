@@ -28,9 +28,9 @@
 # -----------------------
 
 BOOST_VER1=1
-BOOST_VER2=53
+BOOST_VER2=55
 BOOST_VER3=0
-register_option "--boost=<version>" boost_version "Boost version to be used, one of {1.55.0,1.54.0,1.53.0,1.49.0, 1.48.0, 1.45.0}, default is 1.53.0."
+register_option "--boost=<version>" boost_version "Boost version to be used, one of {1.58.0,1.55.0,1.54.0,1.53.0,1.49.0, 1.48.0, 1.45.0}, default is 1.53.0."
 boost_version()
 {
   if [ "$1" = "1.55.0" ]; then
@@ -198,12 +198,10 @@ elif [ -n "${AndroidSourcesDetected}" ]; then
     if [ -f "${NDK_RELEASE_FILE}" ]; then
         NDK_RN=`grep "android-ndk-" "${NDK_RELEASE_FILE}" | head -1 | sed 's/^.*r\(.*\)$/\1/'`
     else
-        dump "ERROR: can not find ndk version"
-        exit 1
+	NDK_RN=`echo "${AndroidNDKRoot}" | head -1 | sed 's/^.*r\(.*\)$/\1/'`
     fi
 else
-    dump "ERROR: can not find ndk version"
-    exit 1
+    NDK_RN=`echo "${AndroidNDKRoot}" | head -1 | sed 's/^.*r\(.*\)$/\1/'`
 fi
 
 echo "Detected Android NDK version $NDK_RN"
@@ -246,6 +244,11 @@ case "$NDK_RN" in
 		;;
 	"9 (64-bit)"|"9b (64-bit)"|"9c (64-bit)"|"9d (64-bit)")
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
+		TOOLSET=gcc-androidR8e
+		;;
+	"14")
+		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.9}
 		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
 		TOOLSET=gcc-androidR8e
 		;;
@@ -319,40 +322,40 @@ then
   # Patching will be done only if we had a successfull bootstrap!
   # -------------------------------------------------------------
 
-  # Apply patches to boost
+#  # Apply patches to boost
   BOOST_VER=${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}
   PATCH_BOOST_DIR=$PROGDIR/patches/boost-${BOOST_VER}
-
+  echo "Putting user config in place"
   cp configs/user-config-boost-${BOOST_VER}.jam $BOOST_DIR/tools/build/v2/user-config.jam
 
-  for dir in $PATCH_BOOST_DIR; do
-    if [ ! -d "$dir" ]; then
-      echo "Could not find directory '$dir' while looking for patches"
+for dir in $PATCH_BOOST_DIR; do
+  if [ ! -d "$dir" ]; then
+    echo "Could not find directory '$dir' while looking for patches"
+    exit 1
+  fi
+
+  PATCHES=`(cd $dir && ls *.patch | sort) 2> /dev/null`
+
+  if [ -z "$PATCHES" ]; then
+    echo "No patches found in directory '$dir'"
+    exit 1
+  fi
+
+  for PATCH in $PATCHES; do
+    PATCH=`echo $PATCH | sed -e s%^\./%%g`
+    SRC_DIR=$PROGDIR/$BOOST_DIR
+    PATCHDIR=`dirname $PATCH`
+    PATCHNAME=`basename $PATCH`
+    log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
+    cd $SRC_DIR && patch -p1 < $dir/$PATCH && cd $PROGDIR
+    if [ $? != 0 ] ; then
+      dump "ERROR: Patch failure !! Please check your patches directory!"
+      dump "       Try to perform a clean build using --clean ."
+      dump "       Problem patch: $dir/$PATCHNAME"
       exit 1
     fi
-
-    PATCHES=`(cd $dir && ls *.patch | sort) 2> /dev/null`
-
-    if [ -z "$PATCHES" ]; then
-      echo "No patches found in directory '$dir'"
-      exit 1
-    fi
-
-    for PATCH in $PATCHES; do
-      PATCH=`echo $PATCH | sed -e s%^\./%%g`
-      SRC_DIR=$PROGDIR/$BOOST_DIR
-      PATCHDIR=`dirname $PATCH`
-      PATCHNAME=`basename $PATCH`
-      log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
-      cd $SRC_DIR && patch -p1 < $dir/$PATCH && cd $PROGDIR
-      if [ $? != 0 ] ; then
-        dump "ERROR: Patch failure !! Please check your patches directory!"
-        dump "       Try to perform a clean build using --clean ."
-        dump "       Problem patch: $dir/$PATCHNAME"
-        exit 1
-      fi
-    done
   done
+done
 fi
 
 echo "# ---------------"

@@ -72,8 +72,8 @@ arm-linux-androideabi-g++
 <compileflags>-DNDEBUG
 <compileflags>-O2
 <compileflags>-g
-<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.6/include
-<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi/include
+<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.9/include
+<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi/include
 # @Moss - Above are the 'oficial' android flags
 <architecture>arm
 <compileflags>-fvisibility=hidden
@@ -115,8 +115,8 @@ arm-linux-androideabi-g++
 <compileflags>-DNDEBUG
 <compileflags>-O2
 <compileflags>-g
-<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.6/include
-<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi/include
+<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.9/include
+<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi/include
 # @Moss - Above are the 'oficial' android flags
 <architecture>arm
 <compileflags>-fvisibility=hidden
